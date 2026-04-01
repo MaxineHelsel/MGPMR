@@ -398,7 +398,7 @@ Sub DebugPrint (Message$)
 End Sub
 
 Sub OSPROBE
-    HostOS = "Unknown OS"
+    HostOS = "Linux" 'if detection fails, assume POSIX compliant system, all linux and mac os targeted code should be POSIX compliant so this is the best default case.
     If InStr(OS$, "WINDOWS") Then HostOS = "Windows"
     If InStr(OS$, "LINUX") Then HostOS = "Linux"
     If InStr(OS$, "MACOSX") Then HostOS = "Mac OS"
