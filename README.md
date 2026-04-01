@@ -12,3 +12,11 @@ Using WASD or Arrow keys, adjust the weights and parameters to your desired liki
 Select "Generate Packs" to save parameters and generate the requested booster packs.
 
 Generated packs will be saved in the ./Pack/(SessionTimestamp)/ directory.
+
+
+
+### Files
+
+mgpmr - Linux Executable
+mgpmr.exe - Windows Executable
+mgpmr.bas - Source Code
