@@ -90,7 +90,7 @@ Weights(R_mythic) = 10
 Weights(R_bonus) = 0
 
 Settings(S_PackSize) = 10
-Settings(S_PackCount) = 10
+Settings(S_PackCount) = 1
 Settings(S_LandCount) = 1
 
 'Create Directory Structure if not already existing
