@@ -64,6 +64,8 @@ Select Case HostOS
         SessionString = Date$ + "_" + LTrim$(RTrim$(Str$(Int(Timer))))
 End Select
 
+Const VersionString = "V1.2"
+
 Const Wsize = 5
 Const R_Land = 0
 Const R_common = 1
@@ -189,7 +191,7 @@ Do
     Cls
     Locate 1, 1
     Print "Maxaroth's Game Pack Maker for Reena"
-    Print "V1.1"
+    Print VersionString
     Print
     Print "  Generate Packs"
     Print
