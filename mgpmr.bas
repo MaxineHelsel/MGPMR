@@ -206,6 +206,7 @@ Do
     Print
     Print "  Exit Program"
 
+    'these following print statements should have an ascii arrow pointing right. ensure it is present when building
     If MenuItem = 0 Then Locate 4, 1: Print "";
     If MenuItem = 1 Then Locate 7, 1: Print "";
     If MenuItem = 2 Then Locate 8, 1: Print "";
@@ -387,28 +388,11 @@ End Function
 
 
 Sub FilesPrompt (Rarity)
-    Select Case Rarity
-        Case R_Land
-            DummyString = Files$(LibraryDirectory + LandDirectory)
-        Case R_common
-            DummyString = Files$(LibraryDirectory + CommonDirectory)
-        Case R_uncommon
-            DummyString = Files$(LibraryDirectory + UncommonDirectory)
-        Case R_rare
-            DummyString = Files$(LibraryDirectory + RareDirectory)
-        Case R_mythic
-            DummyString = Files$(LibraryDirectory + MythicDirectory)
-        Case R_bonus
-            DummyString = Files$(LibraryDirectory + BonusDirectory)
-    End Select
-
-
+    DummyString = Files$(RarityDirectory$(Rarity))
 End Sub
 
 Sub DebugPrint (Message$)
-
     If DebugMode = 1 Then Print Message$
-
 End Sub
 
 Sub OSPROBE
