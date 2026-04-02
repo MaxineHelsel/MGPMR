@@ -3,6 +3,8 @@ Option Explicit
 Randomize Timer
 Dim Shared HostOS As String
 OSPROBE
+On Error GoTo ErrorHandler
+Screen NewImage(640, 480, 32)
 
 Const DebugMode = 0
 
@@ -83,6 +85,8 @@ Const S_LandCount = 2
 
 Dim Settings(Ssize) As Single
 
+Dim Shared ErrorReturn As String
+
 'default weights
 Weights(R_Land) = 0
 Weights(R_common) = 100
@@ -132,7 +136,6 @@ Get #1, , Settings()
 Close #1
 
 DebugPrint "Building Library Array:"
-'GoTo fuck:
 Dim Shared DummyString As String
 Dim RarityCount As Single
 Dim LibraryMaxSize(Wsize) As Single
@@ -185,26 +188,30 @@ Dim MenuItem
 Dim MenuConf
 
 Delay 0.5
-
+MainMenu:
 Do
 
     Cls
     Locate 1, 1
-    Print "Maxaroth's Game Pack Maker for Reena"
-    Print VersionString
+    Print "Maxaroth's Game Pack Maker for Reena (MGPMR)"
+    Print VersionString;
+    Color RGB(255, 0, 0): Print " " + ErrorReturn;: Color RGB(255, 255, 255): Print
     Print
-    Print "  Generate Packs"
+    Color RGB(0, 255, 0): Print "  Generate Packs": Color RGB(255, 255, 255)
     Print
-    Print "Current Parameters:"
-    Print "  Land Weight: " + Trim$(Str$(Weights(R_Land))) + " (Detected: " + Trim$(Str$(LibraryMaxSize(R_Land))) + ")"
-    Print "  Common Weight: " + Trim$(Str$(Weights(R_common))) + " (Detected: " + Trim$(Str$(LibraryMaxSize(R_common))) + ")"
-    Print "  Uncommon Weight: " + Trim$(Str$(Weights(R_uncommon))) + " (Detected: " + Trim$(Str$(LibraryMaxSize(R_uncommon))) + ")"
-    Print "  Rare Weight: " + Trim$(Str$(Weights(R_rare))) + " (Detected: " + Trim$(Str$(LibraryMaxSize(R_rare))) + ")"
-    Print "  Mythic Weight: " + Trim$(Str$(Weights(R_mythic))) + " (Detected: " + Trim$(Str$(LibraryMaxSize(R_mythic))) + ")"
-    Print "  Bonus Weight: " + Trim$(Str$(Weights(R_bonus))) + " (Detected: " + Trim$(Str$(LibraryMaxSize(R_bonus))) + ")"
-    Print "  Cards per Pack: " + Trim$(Str$(Settings(S_PackSize)))
-    Print "  Packs to Generate: " + Trim$(Str$(Settings(S_PackCount)))
-    Print "  Guarenteed Lands per Pack: " + Trim$(Str$(Settings(S_LandCount)))
+    Print "Library Weights:"
+    Print "  Land Weight: ";: ColorNumberPrint (Trim$(Str$(Weights(R_Land)))): Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_Land))): Print ")"
+    Print "  Common Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_common))): Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_common))): Print ")"
+    Print "  Uncommon Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_uncommon))): Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_uncommon))): Print ")"
+    Print "  Rare Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_rare))): Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_rare))): Print ")"
+    Print "  Mythic Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_mythic))): Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_mythic))): Print ")"
+    Print "  Bonus Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_bonus))): Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_bonus))): Print ")"
+    Print
+    Print "Program Settings:"
+    Print "  Cards per Pack: ";: ColorNumberPrint Trim$(Str$(Settings(S_PackSize))): Print
+    Print "  Packs to Generate: ";: ColorNumberPrint Trim$(Str$(Settings(S_PackCount))): Print
+    Print "  Guarenteed Lands per Pack: ";: ColorNumberPrint Trim$(Str$(Settings(S_LandCount))): Print
+    Print "  Library Directory: " + Chr$(34) + LibraryDirectory + Chr$(34)
     Print
     Print "  Exit Program"
 
@@ -216,13 +223,15 @@ Do
     If MenuItem = 4 Then Locate 10, 1: Print "";
     If MenuItem = 5 Then Locate 11, 1: Print "";
     If MenuItem = 6 Then Locate 12, 1: Print "";
-    If MenuItem = 7 Then Locate 13, 1: Print "";
-    If MenuItem = 8 Then Locate 14, 1: Print "";
-    If MenuItem = 9 Then Locate 15, 1: Print "";
-    If MenuItem = 10 Then Locate 17, 1: Print "";
+    If MenuItem = 7 Then Locate 15, 1: Print "";
+    If MenuItem = 8 Then Locate 16, 1: Print "";
+    If MenuItem = 9 Then Locate 17, 1: Print "";
+    If MenuItem = 10 Then Locate 18, 1: Print "";
+    If MenuItem = 11 Then Locate 20, 1: Print "";
 
-    If MenuItem > 10 Then MenuItem = 0
-    If MenuItem < 0 Then MenuItem = 10
+
+    If MenuItem > 11 Then MenuItem = 0
+    If MenuItem < 0 Then MenuItem = 11
 
 
     MenuKey = KeyHit
@@ -247,10 +256,6 @@ Do
         End If
         If Weights(MenuItem - 1) < 0 Then Weights(MenuItem - 1) = 0
 
-        'Floating Poing Fix
-        Weights(MenuItem - 1) = Weights(MenuItem - 1) * 100
-        Weights(MenuItem - 1) = Round(Weights(MenuItem - 1))
-        Weights(MenuItem - 1) = Weights(MenuItem - 1) / 100
     End If
 
     If MenuItem > 6 And MenuItem < 10 Then
@@ -262,12 +267,15 @@ Do
 
 
     If MenuConf = 1 Then
+        'incase we have to come back, reset necessary variables now
+        MenuConf = 0
+        'what to we do when enter is hit?
         Select Case MenuItem
             Case 0
                 GoTo generate
-            Case 1 To 9
+            Case 1 To 10
                 'prompt for manual value input
-            Case 10
+            Case 11
                 System
         End Select
     End If
@@ -289,6 +297,17 @@ Open SettingsDirectory + SettingsFile For Binary As #1
 Put #1, , Settings()
 Close #1
 
+'Check if cards exist
+ii = 0
+For i = 0 To Wsize
+    ii = ii + LibraryMaxSize(i)
+Next
+If ii = 0 Then Error 100
+
+'check if weight configuration is valid
+For i = 0 To Wsize
+    If LibraryMaxSize(i) = 0 And Weights(i) > 0 Then Error 101
+Next
 
 
 
@@ -368,6 +387,43 @@ For PackIterative = 1 To Settings(S_PackCount)
 Next
 
 System
+
+
+ErrorHandler:
+Const MainMenu = 1
+Const Terminate = 2
+Select Case HandlerRoutine
+    Case MainMenu
+        Resume MainMenu
+    Case Else 'and 0
+        Resume Next
+End Select
+
+
+Function HandlerRoutine
+    Dim CapturedError
+    CapturedError = Err
+    Select Case CapturedError
+        Case 100 'attempted to generate pack(s) with an empty library
+            'resolution: assume user is generating template library and close MGPMR
+            ErrorReturn = "No cards detected!  Please populate ./Library/ and restart MGPMR."
+            HandlerRoutine = MainMenu
+        Case 101 'attempted to generate pack(s) with a weight value greater than 0 targeting an empty folder
+            'resolution: return to the main menu with an error return message
+            ErrorReturn = "Invalid configuration detected!  Please set empty folder weights to 0."
+            HandlerRoutine = MainMenu
+        Case Else 'gracefully present the user with the raw error code if not otherwise handled
+            ErrorReturn = "Generic Error Detected!  Error code:" + Str$(CapturedError)
+            HandlerRoutine = MainMenu
+    End Select
+End Function
+
+Sub ColorNumberPrint (Value$)
+    If Val(Value$) = 0 Then Color RGB(255, 0, 0) '0 shall be red
+
+    Print Value$;
+    Color RGB(255, 255, 255)
+End Sub
 
 Function RarityDirectory$ (Rarity)
     Select Case Rarity
