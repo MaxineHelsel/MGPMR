@@ -1,12 +1,14 @@
 $NoPrefix
 Option Explicit
 Randomize Timer
+Title "MGPMR"
 Dim Shared HostOS As String
 OSPROBE
 On Error GoTo ErrorHandler
 Screen NewImage(640, 480, 32)
 $Console
 Console Off
+
 
 'Directory Path Constants
 $If WIN Then
@@ -86,7 +88,7 @@ Select Case HostOS
         SessionString = Date$ + "_" + LTrim$(RTrim$(Str$(Int(Timer))))
 End Select
 
-Const VersionString = "V1.6b"
+Const VersionString = "V1.6"
 
 Const Wsize = 5
 Const R_Land = 0
@@ -255,7 +257,7 @@ Dim MenuItem
 Dim MenuConf
 Dim LibraryInc
 
-Delay 0.5
+
 MainMenu:
 KeyClear
 Do
@@ -266,7 +268,8 @@ Do
     Print VersionString;
     Color RGB(255, 0, 0): Print " " + ErrorReturn;: Color RGB(255, 255, 255): Print
     Locate 3, 1: Print
-    Color RGB(0, 255, 0): Print "  Generate Packs": Color RGB(255, 255, 255)
+    If MenuItem = 0 Then Color RGB(0, 255, 0) Else Color RGB(255 * .6, 255, 255 * .6)
+    Print "  Generate Packs": Color RGB(255, 255, 255)
     Print
     Select Case SelectionMode
         Case 0
@@ -304,17 +307,18 @@ Do
     End If
     Color RGB(255, 255, 255)
 
-    If MenuItem <> 10 Then Print "  Active Library: " + Chr$(34) + LibraryDirectory + Settings_LibraryTarget + Chr$(34) + " (Total Libraries Detected: ";: ColorNumberPrint Trim$(Str$(LibraryCount)), 0: Print ")"
-    If MenuItem = 10 Then Color RGB(0, 255, 0): Print "  Select Library: ";: Print Chr$(34) + LibraryDirectory + AddtLibraryPathArray(LibraryInc) + Chr$(34);: Color RGB(255, 255, 255): Print " (Total Libraries Detected: ";: ColorNumberPrint Trim$(Str$(LibraryCount)), 0: Print ")"
+    If MenuItem <> 10 Then Color RGB(255 * .6, 255, 255 * .6): Print "  Active Library: ";: Color RGB(255, 255, 255): Print Chr$(34) + Settings_LibraryTarget + Chr$(34) + " (Libraries Detected: ";: ColorNumberPrint Trim$(Str$(LibraryCount)), 0: Print ")"
+    If MenuItem = 10 Then Color RGB(0, 255, 0): Print "  Select Library: ";: Print " " + Chr$(34) + AddtLibraryPathArray(LibraryInc) + Chr$(34) + " ";: Color RGB(255, 255, 255): Print " (Libraries Detected: ";: ColorNumberPrint Trim$(Str$(LibraryCount)), 0: Print ")"
 
-
+    If MenuItem = 11 Then Color RGB(0, 255, 0) Else Color RGB(255 * .6, 255, 255 * .6)
     Print "  Selection Mode: ";
+    Color RGB(255, 255, 255)
     If SelectionMode = 0 Then Print "Weight";
     If SelectionMode = 1 Then Print "Count";
     Print ""
 
     Print
-    If MenuItem = 12 Then Color RGB(255, 0, 0)
+    If MenuItem = 12 Then Color RGB(255, 0, 0) Else Color RGB(255, 255 * .6, 255 * .6)
     Print "  Exit Program"
     Color RGB(255, 255, 255)
 
@@ -384,6 +388,11 @@ Do
         'what to we do when enter is hit?
         Select Case MenuItem
             Case 0
+                Locate 4, 1
+                Color RGB(0, 155, 0)
+                Print "Generating Pack(s)...  MGPMR will automatically close upon completion."
+                Display
+                If HostOS <> "Windows" Then Delay 1
                 GoTo generate
             Case 1 To 9
                 'prompt for manual value input
