@@ -1,5 +1,9 @@
 # MGPMR
 
+<img width="642" height="484" alt="MGPMR" src="https://github.com/user-attachments/assets/167e355d-0259-46f9-b87a-0257f63f0e78" />
+
+Description text should go here but im too tired right now... im sorry 
+
 ### Instructions
 Upon first boot MGPMR will create the necessary directory tree in its working directory. 
 
