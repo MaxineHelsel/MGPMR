@@ -13,7 +13,7 @@ Select "Generate Packs" to save parameters and generate the requested booster pa
 
 Generated packs will be saved in the ./Pack/(SessionTimestamp)/ directory.
 
-Additional libraries can be utilized by cloning and renaming ./Library/Active and then selecting a new active library.
+Additional libraries can be utilized by cloning and renaming the "Template" library
 
 
 
