@@ -6,7 +6,7 @@ OSPROBE
 On Error GoTo ErrorHandler
 Screen NewImage(640, 480, 32)
 
-Const DebugMode = 0
+Const DebugMode = 1 'reminant, this no longer has to be turned off unless you want to disable terminal console output
 
 'Directory Path Constants
 $If WIN Then
@@ -23,6 +23,10 @@ $If WIN Then
 
     Const SettingsDirectory = "Settings\"
     Const SettingsFile = "Settings"
+
+    const TemplateLibrary = "Active\"
+
+    const DirSlash = "\"
 $End If
 $If LINUX Then
     Const LibraryDirectory = "Library/"
@@ -39,6 +43,9 @@ $If LINUX Then
     Const SettingsDirectory = "Settings/"
     Const SettingsFile = "Settings"
 
+    Const TemplateLibrary = "Active/"
+
+    Const DirSlash = "/"
 $End If
 $If MAC Then
     Const LibraryDirectory = "Library/"
@@ -55,7 +62,15 @@ $If MAC Then
     Const SettingsDirectory = "Settings/"
     Const SettingsFile = "Settings"
 
+    const TemplateLibrary = "Active/"
+
+    const DirSlash = "/"
 $End If
+'Dim Shared WorkingLibrary As String
+'WorkingLibrary = "Template"
+'This is placed here specifically because it is a path name definition but is not a constant and does not need OS specific formatting
+
+
 
 'Global Variables
 Dim SessionString As String
@@ -66,7 +81,7 @@ Select Case HostOS
         SessionString = Date$ + "_" + LTrim$(RTrim$(Str$(Int(Timer))))
 End Select
 
-Const VersionString = "V1.2"
+Const VersionString = "V1.3"
 
 Const Wsize = 5
 Const R_Land = 0
@@ -78,14 +93,16 @@ Const R_bonus = 5
 
 Dim Weights(Wsize) As Single
 
-Const Ssize = 3
+Const Ssize = 2
 Const S_PackSize = 0
 Const S_PackCount = 1
 Const S_LandCount = 2
 
 Dim Settings(Ssize) As Single
+Dim Shared Settings_LibraryTarget As String
 
 Dim Shared ErrorReturn As String
+
 
 'default weights
 Weights(R_Land) = 0
@@ -98,41 +115,50 @@ Weights(R_bonus) = 0
 Settings(S_PackSize) = 10
 Settings(S_PackCount) = 1
 Settings(S_LandCount) = 1
+Settings_LibraryTarget = TemplateLibrary
+
 
 'Create Directory Structure if not already existing
-If DirExists(LibraryDirectory) = 0 Then
-    DebugPrint "Creating Empty Library Folder."
-    MkDir LibraryDirectory 'create parent
-    MkDir LibraryDirectory + CommonDirectory
-    MkDir LibraryDirectory + UncommonDirectory
-    MkDir LibraryDirectory + RareDirectory
-    MkDir LibraryDirectory + MythicDirectory
-    MkDir LibraryDirectory + BonusDirectory
-    MkDir LibraryDirectory + LandDirectory
-    Open LibraryDirectory + WeightsFile For Binary As #1
-    Put #1, , Weights()
-    Close #1
-End If
-If DirExists(PackDirectory) = 0 Then
-    DebugPrint "Creating Empty Output Pack Folder."
-    MkDir PackDirectory
-End If
 If DirExists(SettingsDirectory) = 0 Then
     DebugPrint "Creating Empty Settings Folder"
     MkDir SettingsDirectory
     Open SettingsDirectory + SettingsFile For Binary As #1
     Put #1, , Settings()
+    Put #1, , Settings_LibraryTarget
+    Close #1
+End If
+If DirExists(LibraryDirectory) = 0 Then
+    DebugPrint "Creating Empty Library Folder."
+    MkDir LibraryDirectory 'create parent
+End If
+If DirExists(LibraryDirectory + Settings_LibraryTarget) = 0 Then
+    DebugPrint "Generating Template Library at: " + LibraryDirectory + Settings_LibraryTarget
+    MkDir LibraryDirectory + Settings_LibraryTarget
+    MkDir LibraryDirectory + Settings_LibraryTarget + CommonDirectory
+    MkDir LibraryDirectory + Settings_LibraryTarget + UncommonDirectory
+    MkDir LibraryDirectory + Settings_LibraryTarget + RareDirectory
+    MkDir LibraryDirectory + Settings_LibraryTarget + MythicDirectory
+    MkDir LibraryDirectory + Settings_LibraryTarget + BonusDirectory
+    MkDir LibraryDirectory + Settings_LibraryTarget + LandDirectory
+    Open LibraryDirectory + Settings_LibraryTarget + WeightsFile For Binary As #1
+    Put #1, , Weights()
     Close #1
 End If
 
+If DirExists(PackDirectory) = 0 Then
+    DebugPrint "Creating Empty Output Pack Folder."
+    MkDir PackDirectory
+End If
+
 'load settings and weights
-DebugPrint "Loading Library Weights."
-Open LibraryDirectory + WeightsFile For Binary As #1
-Get #1, , Weights()
-Close #1
 DebugPrint "Loading Settings."
 Open SettingsDirectory + SettingsFile For Binary As #1
 Get #1, , Settings()
+Get #1, , Settings_LibraryTarget
+Close #1
+DebugPrint "Loading Library Weights."
+Open LibraryDirectory + Settings_LibraryTarget + WeightsFile For Binary As #1
+Get #1, , Weights()
 Close #1
 
 DebugPrint "Building Library Array:"
@@ -157,8 +183,7 @@ For i = 0 To Wsize
     LibraryMaxSize(i) = RarityCount
     If RarityCount > LibArrayMaxSize Then LibArrayMaxSize = RarityCount
 Next
-DebugPrint "Largest Folder: " + Str$(LibArrayMaxSize)
-
+DebugPrint "Largest Folder Size: " + Str$(LibArrayMaxSize)
 
 'build library array
 Dim LibraryArray(Wsize, LibArrayMaxSize) As String 'this is THE array that hold all of the file names for the fun little cards
@@ -177,6 +202,11 @@ DebugPrint "Total Library Size Detected:"
 For i = 0 To Wsize
     DebugPrint Str$(LibraryMaxSize(i))
 Next
+
+
+DebugPrint "Detect Additional Libraries"
+Dim LibraryCount
+
 
 
 DebugPrint "..."
@@ -200,18 +230,18 @@ Do
     Color RGB(0, 255, 0): Print "  Generate Packs": Color RGB(255, 255, 255)
     Print
     Print "Library Weights:"
-    Print "  Land Weight: ";: ColorNumberPrint (Trim$(Str$(Weights(R_Land)))): Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_Land))): Print ")"
-    Print "  Common Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_common))): Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_common))): Print ")"
-    Print "  Uncommon Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_uncommon))): Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_uncommon))): Print ")"
-    Print "  Rare Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_rare))): Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_rare))): Print ")"
-    Print "  Mythic Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_mythic))): Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_mythic))): Print ")"
-    Print "  Bonus Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_bonus))): Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_bonus))): Print ")"
+    Print "  Land Weight: ";: ColorNumberPrint (Trim$(Str$(Weights(R_Land)))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_Land))), 0: Print ")"
+    Print "  Common Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_common))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_common))), 0: Print ")"
+    Print "  Uncommon Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_uncommon))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_uncommon))), 0: Print ")"
+    Print "  Rare Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_rare))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_rare))), 0: Print ")"
+    Print "  Mythic Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_mythic))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_mythic))), 0: Print ")"
+    Print "  Bonus Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_bonus))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_bonus))), 0: Print ")"
     Print
     Print "Program Settings:"
-    Print "  Cards per Pack: ";: ColorNumberPrint Trim$(Str$(Settings(S_PackSize))): Print
-    Print "  Packs to Generate: ";: ColorNumberPrint Trim$(Str$(Settings(S_PackCount))): Print
-    Print "  Guarenteed Lands per Pack: ";: ColorNumberPrint Trim$(Str$(Settings(S_LandCount))): Print
-    Print "  Library Directory: " + Chr$(34) + LibraryDirectory + Chr$(34)
+    Print "  Cards per Pack: ";: ColorNumberPrint Trim$(Str$(Settings(S_PackSize))), 0: Print
+    Print "  Packs to Generate: ";: ColorNumberPrint Trim$(Str$(Settings(S_PackCount))), 0: Print
+    Print "  Guarenteed Lands per Pack: ";: ColorNumberPrint Trim$(Str$(Settings(S_LandCount))), 0: Print
+    Print "  Active Library: " + Chr$(34) + LibraryDirectory + Settings_LibraryTarget + Chr$(34) + " (Total Libraries Detected: ";: ColorNumberPrint Trim$(Str$(LibraryCount)), 0: Print ")"
     Print
     Print "  Exit Program"
 
@@ -274,6 +304,7 @@ Do
             Case 0
                 GoTo generate
             Case 1 To 10
+                i = Settings(100)
                 'prompt for manual value input
             Case 11
                 System
@@ -290,11 +321,13 @@ generate:
 AutoDisplay
 
 'save settings
-Open LibraryDirectory + WeightsFile For Binary As #1
-Put #1, , Weights()
-Close #1
 Open SettingsDirectory + SettingsFile For Binary As #1
 Put #1, , Settings()
+Put #1, , Settings_LibraryTarget
+Close #1
+
+Open LibraryDirectory + Settings_LibraryTarget + WeightsFile For Binary As #1
+Put #1, , Weights()
 Close #1
 
 'Check if cards exist
@@ -331,8 +364,9 @@ MkDir PackDirectory + SessionString + "\"
 For PackIterative = 1 To Settings(S_PackCount)
     MkDir PackDirectory + SessionString + "\" + "Pack" + Trim$(Str$(PackIterative))
     For CardIterative = 1 To Settings(S_PackSize)
-        DebugPrint Str$(CardIterative)
-        DebugPrint Str$(Settings(S_LandCount))
+        DebugPrint "Pack " + Trim$(Str$(PackIterative))
+        DebugPrint "Card " + Trim$(Str$(CardIterative))
+        DebugPrint "Forced Lands " + Trim$(Str$(Settings(S_LandCount)))
         If CardIterative <= Settings(S_LandCount) Then 'force X lands in each pack
             WinningRarity = R_Land
             WinningCard = LibraryArray(WinningRarity, 1 + Int(Rnd * LibraryMaxSize(WinningRarity)))
@@ -352,26 +386,9 @@ For PackIterative = 1 To Settings(S_PackCount)
                 End If
             Next
 
-            'OLD DIRTY METHOD
-            'Select EveryCase Rnd
-            '    Case Is < Weights(R_Land)
-            '        WinningRarity = R_Land
-            '    Case Is < Weights(R_common)
-            '        WinningRarity = R_common
-            '    Case Is < Weights(R_uncommon)
-            '        WinningRarity = R_uncommon
-            '    Case Is < Weights(R_rare)
-            '        WinningRarity = R_rare
-            '    Case Is < Weights(R_mythic)
-            '        WinningRarity = R_mythic
-            '    Case Is < Weights(R_bonus)
-            '        WinningRarity = R_bonus
-            'End Select
-
-
             WinningCard = LibraryArray(WinningRarity, 1 + Int(Rnd * LibraryMaxSize(WinningRarity)))
         End If
-        DebugPrint WinningCard
+        DebugPrint "Wining Card: " + WinningCard + " at rarity " + Trim$(Str$(WinningRarity))
         'check if card already exists and reroll if it does
         If FileExists(PackDirectory + SessionString + "\" + "Pack" + Trim$(Str$(PackIterative)) + "\" + WinningCard) = -1 Then
             CardIterative = CardIterative - 1
@@ -402,10 +419,13 @@ End Select
 
 Function HandlerRoutine
     Dim CapturedError
+    Dim CapturedLine
+    Dim CapturedType As String
     CapturedError = Err
+    CapturedLine = ErrorLine
     Select Case CapturedError
         Case 100 'attempted to generate pack(s) with an empty library
-            'resolution: assume user is generating template library and close MGPMR
+            'resolution: assume user is generating template library and ~~close MGPMR~~ return to main menu to show error message
             ErrorReturn = "No cards detected!  Please populate ./Library/ and restart MGPMR."
             HandlerRoutine = MainMenu
         Case 101 'attempted to generate pack(s) with a weight value greater than 0 targeting an empty folder
@@ -413,14 +433,24 @@ Function HandlerRoutine
             ErrorReturn = "Invalid configuration detected!  Please set empty folder weights to 0."
             HandlerRoutine = MainMenu
         Case Else 'gracefully present the user with the raw error code if not otherwise handled
-            ErrorReturn = "Generic Error Detected!  Error code:" + Str$(CapturedError)
+            ErrorReturn = "Generic Error Detected!  Error code: " + Trim$(Str$(CapturedError)) + "@" + Trim$(Str$(CapturedLine))
             HandlerRoutine = MainMenu
     End Select
+    'return a m
+    DebugPrint "MGPMR ERROR HANDLER: " + Trim$(Str$(CapturedError)) + "@" + Trim$(Str$(CapturedLine))
+    DebugPrint "Error Number: " + Trim$(Str$(CapturedError))
+    DebugPrint "Error Line: " + Trim$(Str$(CapturedLine))
+    If CapturedError >= 100 And CapturedError <= 150 Then CapturedType = "MGPMR Error" Else CapturedType = "QB64 Error"
+    DebugPrint "Error Type: " + CapturedType
+    DebugPrint "Error Return Message: " + ErrorReturn
 End Function
 
-Sub ColorNumberPrint (Value$)
+Sub ColorNumberPrint (Value$, Gradiant)
+    Dim OrangeOffset
+    OrangeOffset = 150 - (Val(Value$) * 2)
+    If OrangeOffset < 100 Then OrangeOffset = 100
+    If Gradiant = 1 Then Color RGB(255 - Val(Value$) * 2.3, 255 - OrangeOffset, 0) 'weight color gradiant
     If Val(Value$) = 0 Then Color RGB(255, 0, 0) '0 shall be red
-
     Print Value$;
     Color RGB(255, 255, 255)
 End Sub
@@ -428,17 +458,17 @@ End Sub
 Function RarityDirectory$ (Rarity)
     Select Case Rarity
         Case R_Land
-            RarityDirectory$ = LibraryDirectory + LandDirectory
+            RarityDirectory$ = LibraryDirectory + Settings_LibraryTarget + LandDirectory
         Case R_common
-            RarityDirectory$ = LibraryDirectory + CommonDirectory
+            RarityDirectory$ = LibraryDirectory + Settings_LibraryTarget + CommonDirectory
         Case R_uncommon
-            RarityDirectory$ = LibraryDirectory + UncommonDirectory
+            RarityDirectory$ = LibraryDirectory + Settings_LibraryTarget + UncommonDirectory
         Case R_rare
-            RarityDirectory$ = LibraryDirectory + RareDirectory
+            RarityDirectory$ = LibraryDirectory + Settings_LibraryTarget + RareDirectory
         Case R_mythic
-            RarityDirectory$ = LibraryDirectory + MythicDirectory
+            RarityDirectory$ = LibraryDirectory + Settings_LibraryTarget + MythicDirectory
         Case R_bonus
-            RarityDirectory$ = LibraryDirectory + BonusDirectory
+            RarityDirectory$ = LibraryDirectory + Settings_LibraryTarget + BonusDirectory
 
     End Select
 End Function
@@ -450,7 +480,10 @@ Sub FilesPrompt (Rarity)
 End Sub
 
 Sub DebugPrint (Message$)
-    If DebugMode = 1 Then Print Message$
+    If DebugMode = 1 Then
+        $Console
+        Echo Message$
+    End If
 End Sub
 
 Sub OSPROBE
