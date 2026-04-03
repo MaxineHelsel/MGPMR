@@ -24,7 +24,7 @@ $If WIN Then
     Const SettingsDirectory = "Settings\"
     Const SettingsFile = "Settings"
 
-    const TemplateLibrary = "Active\"
+    const TemplateLibrary = "Template\"
 
     const DirSlash = "\"
 $End If
@@ -43,7 +43,7 @@ $If LINUX Then
     Const SettingsDirectory = "Settings/"
     Const SettingsFile = "Settings"
 
-    Const TemplateLibrary = "Active/"
+    Const TemplateLibrary = "Template/"
 
     Const DirSlash = "/"
 $End If
@@ -62,7 +62,7 @@ $If MAC Then
     Const SettingsDirectory = "Settings/"
     Const SettingsFile = "Settings"
 
-    const TemplateLibrary = "Active/"
+    const TemplateLibrary = "Template/"
 
     const DirSlash = "/"
 $End If
@@ -86,7 +86,7 @@ Select Case HostOS
         SessionString = Date$ + "_" + LTrim$(RTrim$(Str$(Int(Timer))))
 End Select
 
-Const VersionString = "V1.4.1"
+Const VersionString = "V1.5"
 
 Const Wsize = 5
 Const R_Land = 0
@@ -103,8 +103,11 @@ Const S_PackSize = 0
 Const S_PackCount = 1
 Const S_LandCount = 2
 
+
 Dim Shared Settings(Ssize) As Single
 Dim Shared Settings_LibraryTarget As String
+
+Dim Shared SelectionMode
 
 Dim Shared ErrorReturn As String
 
@@ -129,6 +132,7 @@ Weights(R_bonus) = 0
 Settings(S_PackSize) = 10
 Settings(S_PackCount) = 1
 Settings(S_LandCount) = 1
+SelectionMode = 0
 Settings_LibraryTarget = TemplateLibrary
 
 
@@ -264,22 +268,58 @@ Do
     Locate 3, 1: Print
     Color RGB(0, 255, 0): Print "  Generate Packs": Color RGB(255, 255, 255)
     Print
-    Print "Library Weights:"
-    Print "  Land Weight: ";: ColorNumberPrint (Trim$(Str$(Weights(R_Land)))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_Land))), 0: Print ")"
-    Print "  Common Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_common))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_common))), 0: Print ")"
-    Print "  Uncommon Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_uncommon))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_uncommon))), 0: Print ")"
-    Print "  Rare Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_rare))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_rare))), 0: Print ")"
-    Print "  Mythic Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_mythic))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_mythic))), 0: Print ")"
-    Print "  Bonus Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_bonus))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_bonus))), 0: Print ")"
+    Select Case SelectionMode
+        Case 0
+            Print "Library Weights:"
+            Print "  Land Weight: ";: ColorNumberPrint (Trim$(Str$(Weights(R_Land)))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_Land))), 0: Print ")"
+            Print "  Common Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_common))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_common))), 0: Print ")"
+            Print "  Uncommon Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_uncommon))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_uncommon))), 0: Print ")"
+            Print "  Rare Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_rare))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_rare))), 0: Print ")"
+            Print "  Mythic Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_mythic))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_mythic))), 0: Print ")"
+            Print "  Bonus Weight: ";: ColorNumberPrint Trim$(Str$(Weights(R_bonus))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_bonus))), 0: Print ")"
+        Case 1
+            Print "Number of Cards to Include:"
+            Print "  Land Cards: ";: ColorNumberPrint (Trim$(Str$(Weights(R_Land)))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_Land))), 0: Print ")"
+            Print "  Common Cards: ";: ColorNumberPrint Trim$(Str$(Weights(R_common))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_common))), 0: Print ")"
+            Print "  Uncommon Cards: ";: ColorNumberPrint Trim$(Str$(Weights(R_uncommon))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_uncommon))), 0: Print ")"
+            Print "  Rare Cards: ";: ColorNumberPrint Trim$(Str$(Weights(R_rare))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_rare))), 0: Print ")"
+            Print "  Mythic Cards: ";: ColorNumberPrint Trim$(Str$(Weights(R_mythic))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_mythic))), 0: Print ")"
+            Print "  Bonus Cards: ";: ColorNumberPrint Trim$(Str$(Weights(R_bonus))), 1: Print " (Cards Detected: ";: ColorNumberPrint Trim$(Str$(LibraryMaxSize(R_bonus))), 0: Print ")"
+    End Select
     Print
     Print "Program Settings:"
-    Print "  Cards per Pack: ";: ColorNumberPrint Trim$(Str$(Settings(S_PackSize))), 2: Print
+    If SelectionMode = 1 Then
+        Color RGB(100, 100, 100)
+        Print "  Disabled in Count mode."
+    Else
+        Print "  Cards per Pack: ";: ColorNumberPrint Trim$(Str$(Settings(S_PackSize))), 2: Print
+    End If
+    Color RGB(255, 255, 255)
     Print "  Packs to Generate: ";: ColorNumberPrint Trim$(Str$(Settings(S_PackCount))), 0: Print
-    Print "  Guarenteed Lands per Pack: ";: ColorNumberPrint Trim$(Str$(Settings(S_LandCount))), 0: Print
+    If SelectionMode = 1 Then
+        Color RGB(100, 100, 100)
+        Print "  Disabled in Count mode."
+    Else
+        Print "  Guarenteed Lands per Pack: ";: ColorNumberPrint Trim$(Str$(Settings(S_LandCount))), 0: Print
+    End If
+    Color RGB(255, 255, 255)
+
     If MenuItem <> 10 Then Print "  Active Library: " + Chr$(34) + LibraryDirectory + Settings_LibraryTarget + Chr$(34) + " (Total Libraries Detected: ";: ColorNumberPrint Trim$(Str$(LibraryCount)), 0: Print ")"
     If MenuItem = 10 Then Color RGB(0, 255, 0): Print "  Select Library: ";: Print Chr$(34) + LibraryDirectory + AddtLibraryPathArray(LibraryInc) + Chr$(34);: Color RGB(255, 255, 255): Print " (Total Libraries Detected: ";: ColorNumberPrint Trim$(Str$(LibraryCount)), 0: Print ")"
+
+    If MenuItem <> 11 Or SelectionMode = 0 Then
+        Print "  Selection Mode: ";
+        If SelectionMode = 0 Then Print "Weight";
+        If SelectionMode = 1 Then Print "Count";
+        Print ""
+    Else
+        Color RGB(255, 0, 0)
+        Print "  Restart Required to Revert to Weights!"
+        Color RGB(255, 255, 255)
+    End If
+
     Print
-    If MenuItem = 11 Then Color RGB(255, 0, 0)
+    If MenuItem = 12 Then Color RGB(255, 0, 0)
     Print "  Exit Program"
     Color RGB(255, 255, 255)
 
@@ -295,11 +335,12 @@ Do
     If MenuItem = 8 Then Locate 16, 1: Print "";
     If MenuItem = 9 Then Locate 17, 1: Print "";
     If MenuItem = 10 Then Locate 18, 1: Print "";
-    If MenuItem = 11 Then Locate 20, 1: Print "";
+    If MenuItem = 11 Then Locate 19, 1: Print "";
+    If MenuItem = 12 Then Locate 21, 1: Print "";
 
 
-    If MenuItem > 11 Then MenuItem = 0
-    If MenuItem < 0 Then MenuItem = 11
+    If MenuItem > 12 Then MenuItem = 0
+    If MenuItem < 0 Then MenuItem = 12
 
 
     MenuKey = KeyHit
@@ -310,14 +351,14 @@ Do
 
     If MenuItem > 0 And MenuItem < 7 Then 'weights counters
         If MenuKey = -19200 Or MenuKey = -97 Or MenuKey = -65 Then
-            If KeyDown(100303) Or KeyDown(100304) Then
+            If Abs(Shift) <> SelectionMode Then
                 Weights(MenuItem - 1) = Weights(MenuItem - 1) - 1
             Else
                 Weights(MenuItem - 1) = Weights(MenuItem - 1) - 5
             End If
         End If
         If MenuKey = -19712 Or MenuKey = -100 Or MenuKey = -68 Then
-            If KeyDown(100303) Or KeyDown(100304) Then
+            If Abs(Shift) <> SelectionMode Then
                 Weights(MenuItem - 1) = Weights(MenuItem - 1) + 1
             Else
                 Weights(MenuItem - 1) = Weights(MenuItem - 1) + 5
@@ -333,7 +374,7 @@ Do
         If Settings(MenuItem - 7) < 0 Then Settings(MenuItem - 7) = 0
     End If
 
-    If MenuItem = 10 Then 'library scroll
+    If MenuItem = 10 Then 'library select
         If MenuKey = -19200 Or MenuKey = -97 Or MenuKey = -65 Then LibraryInc = LibraryInc - 1
         If MenuKey = -19712 Or MenuKey = -100 Or MenuKey = -68 Then LibraryInc = LibraryInc + 1
         If LibraryInc < 1 Then LibraryInc = 1
@@ -364,6 +405,13 @@ Do
                 End Select
                 System
             Case 11
+                If SelectionMode = 1 Then System
+                SelectionMode = 1
+                For i = 0 To Wsize
+                    Weights(i) = 0
+                Next
+                DebugPrint "Changing to Card Count mode!  Weights have been overwritten in memory and saving disabled."
+            Case 12
                 System
         End Select
     End If
@@ -371,7 +419,7 @@ Do
 
 
     Display
-    Limit 60
+    Limit 30
 Loop
 
 generate:
@@ -379,9 +427,11 @@ AutoDisplay
 
 'save settings
 SaveSettings
-Open LibraryDirectory + Settings_LibraryTarget + WeightsFile For Binary As #1
-Put #1, , Weights()
-Close #1
+If SelectionMode = 0 Then
+    Open LibraryDirectory + Settings_LibraryTarget + WeightsFile For Binary As #1
+    Put #1, , Weights()
+    Close #1
+End If
 
 'Check if cards exist
 ii = 0
@@ -395,15 +445,22 @@ For i = 0 To Wsize
     If LibraryMaxSize(i) = 0 And Weights(i) > 0 Then Error 101
 Next
 
-'check if card count is valid
-If Settings(S_PackSize) > LibraryTotalSize Then Error 102
+If SelectionMode = 0 Then
+    'check if card count is valid
+    If Settings(S_PackSize) > LibraryTotalSize Then Error 102
 
-'check if forcing lands out of an empty land folder
-If Settings(S_LandCount) > LibraryMaxSize(R_Land) Then Error 105
+    'check if forcing lands out of an empty land folder
+    If Settings(S_LandCount) > LibraryMaxSize(R_Land) Then Error 105
+End If
+If SelectionMode = 1 Then
+    'check if overdrawing
+    For i = 0 To Wsize
+        If Weights(i) > LibraryMaxSize(i) Then Error 106
+    Next
+End If
 
-
-DebugPrint "Generating" + Str$(Settings(S_PackCount)) + " Packs containing" + Str$(Settings(S_PackSize)) + " Cards."
-
+If SelectionMode = 0 Then DebugPrint "Generating" + Str$(Settings(S_PackCount)) + " Packs containing" + Str$(Settings(S_PackSize)) + " Cards."
+If SelectionMode = 1 Then DebugPrint "Generating" + Str$(Settings(S_PackCount)) + " Packs containing set card counts."
 Dim PackIterative As Single
 Dim CardIterative As Single
 Dim WinningCard As String
@@ -421,44 +478,69 @@ Next
 MkDir PackDirectory + SessionString + "\"
 For PackIterative = 1 To Settings(S_PackCount)
     MkDir PackDirectory + SessionString + "\" + "Pack" + Trim$(Str$(PackIterative))
-    For CardIterative = 1 To Settings(S_PackSize)
-        DebugPrint "Pack " + Trim$(Str$(PackIterative))
-        DebugPrint "Card " + Trim$(Str$(CardIterative))
-        DebugPrint "Forced Lands " + Trim$(Str$(Settings(S_LandCount)))
-        If CardIterative <= Settings(S_LandCount) Then 'force X lands in each pack
-            WinningRarity = R_Land
-            WinningCard = LibraryArray(WinningRarity, 1 + Int(Rnd * LibraryMaxSize(WinningRarity)))
-        Else 'fill rest of pack
+    Select Case SelectionMode
+        Case 0
+
+            For CardIterative = 1 To Settings(S_PackSize)
+                DebugPrint "Pack " + Trim$(Str$(PackIterative))
+                DebugPrint "Card " + Trim$(Str$(CardIterative))
+                DebugPrint "Forced Lands " + Trim$(Str$(Settings(S_LandCount)))
+                If CardIterative <= Settings(S_LandCount) Then 'force X lands in each pack
+                    WinningRarity = R_Land
+                    WinningCard = LibraryArray(WinningRarity, 1 + Int(Rnd * LibraryMaxSize(WinningRarity)))
+                Else 'fill rest of pack
 
 
-            'find target
-            TargetWeight = Rnd * CumulativeWeight
+                    'find target
+                    TargetWeight = Rnd * CumulativeWeight
 
-            'iterate to target threshold
-            IterativeWeight = 0
-            For i = 0 To Wsize
-                IterativeWeight = IterativeWeight + Weights(i)
-                If IterativeWeight > TargetWeight Then
-                    WinningRarity = i
-                    Exit For
+                    'iterate to target threshold
+                    IterativeWeight = 0
+                    For i = 0 To Wsize
+                        IterativeWeight = IterativeWeight + Weights(i)
+                        If IterativeWeight > TargetWeight Then
+                            WinningRarity = i
+                            Exit For
+                        End If
+                    Next
+
+                    WinningCard = LibraryArray(WinningRarity, 1 + Int(Rnd * LibraryMaxSize(WinningRarity)))
                 End If
+                DebugPrint "Wining Card: " + WinningCard + " at rarity " + Trim$(Str$(WinningRarity))
+                'check if card already exists and reroll if it does
+                If FileExists(PackDirectory + SessionString + "\" + "Pack" + Trim$(Str$(PackIterative)) + "\" + WinningCard) = -1 Then
+                    CardIterative = CardIterative - 1
+                End If
+                'copy winning card to pack file
+                Select Case HostOS
+                    Case "Linux", "Mac OS"
+                        Shell Hide "cp " + Chr$(34) + RarityDirectory$(WinningRarity) + WinningCard + Chr$(34) + " " + Chr$(34) + PackDirectory + SessionString + "/" + "Pack" + Trim$(Str$(PackIterative)) + "/" + WinningCard + Chr$(34)
+                    Case "Windows"
+                        Shell Hide "copy " + Chr$(34) + RarityDirectory$(WinningRarity) + WinningCard + Chr$(34) + " " + Chr$(34) + PackDirectory + SessionString + "\" + "Pack" + Trim$(Str$(PackIterative)) + "\" + WinningCard + Chr$(34)
+                End Select
+            Next
+        Case 1
+            For i = 0 To Wsize
+                For ii = 1 To Weights(i)
+                    If Weights(i) > 0 Then
+                        WinningCard = LibraryArray(i, 1 + Int(Rnd * LibraryMaxSize(i)))
+                        DebugPrint "Wining Card: " + WinningCard + " at rarity " + Trim$(Str$(i))
+                        'check if card already exists and reroll if it does
+                        If FileExists(PackDirectory + SessionString + "\" + "Pack" + Trim$(Str$(PackIterative)) + "\" + WinningCard) = -1 Then
+                            ii = ii - 1
+                        End If
+                        'copy winning card to pack file
+                        Select Case HostOS
+                            Case "Linux", "Mac OS"
+                                Shell Hide "cp " + Chr$(34) + RarityDirectory$(i) + WinningCard + Chr$(34) + " " + Chr$(34) + PackDirectory + SessionString + "/" + "Pack" + Trim$(Str$(PackIterative)) + "/" + WinningCard + Chr$(34)
+                            Case "Windows"
+                                Shell Hide "copy " + Chr$(34) + RarityDirectory$(i) + WinningCard + Chr$(34) + " " + Chr$(34) + PackDirectory + SessionString + "\" + "Pack" + Trim$(Str$(PackIterative)) + "\" + WinningCard + Chr$(34)
+                        End Select
+                    End If
+                Next
             Next
 
-            WinningCard = LibraryArray(WinningRarity, 1 + Int(Rnd * LibraryMaxSize(WinningRarity)))
-        End If
-        DebugPrint "Wining Card: " + WinningCard + " at rarity " + Trim$(Str$(WinningRarity))
-        'check if card already exists and reroll if it does
-        If FileExists(PackDirectory + SessionString + "\" + "Pack" + Trim$(Str$(PackIterative)) + "\" + WinningCard) = -1 Then
-            CardIterative = CardIterative - 1
-        End If
-        'copy winning card to pack file
-        Select Case HostOS
-            Case "Linux", "Mac OS"
-                Shell Hide "cp " + Chr$(34) + RarityDirectory$(WinningRarity) + WinningCard + Chr$(34) + " " + Chr$(34) + PackDirectory + SessionString + "/" + "Pack" + Trim$(Str$(PackIterative)) + "/" + WinningCard + Chr$(34)
-            Case "Windows"
-                Shell Hide "copy " + Chr$(34) + RarityDirectory$(WinningRarity) + WinningCard + Chr$(34) + " " + Chr$(34) + PackDirectory + SessionString + "\" + "Pack" + Trim$(Str$(PackIterative)) + "\" + WinningCard + Chr$(34)
-        End Select
-    Next
+    End Select
 Next
 
 System
@@ -480,6 +562,9 @@ Select Case HandlerRoutine
         Resume Next
 End Select
 
+Function Shift
+    If KeyDown(100303) Or KeyDown(100304) Then Shift = -1
+End Function
 
 Function HandlerRoutine
     Dim CapturedError
@@ -490,11 +575,12 @@ Function HandlerRoutine
     Select Case CapturedError
         Case 100 'attempted to generate pack(s) with an empty library
             'resolution: assume user is generating template library and ~~close MGPMR~~ return to main menu to show error message
-            ErrorReturn = "No cards detected!  Please populate the active library and restart MGPMR."
+            ErrorReturn = "No cards detected!  Please select a non empty library."
             HandlerRoutine = MainMenu
         Case 101 'attempted to generate pack(s) with a weight value greater than 0 targeting an empty folder
             'resolution: return to the main menu with an error return message
-            ErrorReturn = "Invalid configuration detected!  Please set empty folder weights to 0."
+            If SelectionMode = 0 Then ErrorReturn = "Invalid configuration detected!  Please set empty folder weights to 0."
+            If SelectionMode = 1 Then ErrorReturn = "Invalid configuration detected!  Please set empty folder counts to 0."
             HandlerRoutine = MainMenu
         Case 102 'attempted to generate packs with more cards than in library
             ErrorReturn = "Invalid configuration detected!  Too many cards per pack."
@@ -506,8 +592,10 @@ Function HandlerRoutine
             ErrorReturn = "Loaded settings file was generated on a different version!  Auto Regenerating."
             HandlerRoutine = RegenerateSettings
         Case 105 'attempted to force pick more land than exist
-            ErrorReturn = "Invalid configuration detected!  Not enough lands in library."
+            ErrorReturn = "Invalid configuration detected!  Too many lands guarenteed."
             HandlerRoutine = MainMenu
+        Case 106
+            ErrorReturn = "Invalid configuration detected!  Overdrawing rarity."
         Case Else 'gracefully present the user with the raw error code if not otherwise handled
             ErrorReturn = "Generic Error Detected!  Error code: " + Trim$(Str$(CapturedError)) + "@" + Trim$(Str$(CapturedLine))
             HandlerRoutine = MainMenu
@@ -572,6 +660,7 @@ Sub ColorNumberPrint (Value$, Mode)
     OrangeOffset = 150 - (Val(Value$) * 2)
     If OrangeOffset < 100 Then OrangeOffset = 100
     If Mode = 1 Then Color RGB(255 - Val(Value$) * 2.3, 255 - OrangeOffset, 0) 'weight color gradiant
+    If Mode = 1 And SelectionMode = 1 Then Color RGB(0, 155, 0) 'count mode green
     If Val(Value$) = 0 Then Color RGB(255, 0, 0) '0 shall be red
     If Mode = 2 And Val(Value$) > LibraryTotalSize Then Color RGB(255, 0, 0)
     Print Value$;
