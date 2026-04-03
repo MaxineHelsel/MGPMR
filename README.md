@@ -1,6 +1,6 @@
 # MGPMR
 
-<img width="642" height="484" alt="MGPMR" src="https://github.com/user-attachments/assets/167e355d-0259-46f9-b87a-0257f63f0e78" />
+<img width="646" height="486" alt="MGPMR_Better" src="https://github.com/user-attachments/assets/d827f74f-30fb-4b83-b778-43c59348edb3" />
 
 Description text should go here but im too tired right now... im sorry 
 
