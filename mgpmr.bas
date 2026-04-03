@@ -86,7 +86,7 @@ Select Case HostOS
         SessionString = Date$ + "_" + LTrim$(RTrim$(Str$(Int(Timer))))
 End Select
 
-Const VersionString = "V1.4"
+Const VersionString = "V1.4.1"
 
 Const Wsize = 5
 Const R_Land = 0
@@ -261,7 +261,7 @@ Do
     Print "Maxaroth's Game Pack Maker for Reena (MGPMR)"
     Print VersionString;
     Color RGB(255, 0, 0): Print " " + ErrorReturn;: Color RGB(255, 255, 255): Print
-    Print
+    Locate 3, 1: Print
     Color RGB(0, 255, 0): Print "  Generate Packs": Color RGB(255, 255, 255)
     Print
     Print "Library Weights:"
@@ -398,6 +398,9 @@ Next
 'check if card count is valid
 If Settings(S_PackSize) > LibraryTotalSize Then Error 102
 
+'check if forcing lands out of an empty land folder
+If Settings(S_LandCount) > LibraryMaxSize(R_Land) Then Error 105
+
 
 DebugPrint "Generating" + Str$(Settings(S_PackCount)) + " Packs containing" + Str$(Settings(S_PackSize)) + " Cards."
 
@@ -502,6 +505,9 @@ Function HandlerRoutine
         Case 104 'settings file is from a different version
             ErrorReturn = "Loaded settings file was generated on a different version!  Auto Regenerating."
             HandlerRoutine = RegenerateSettings
+        Case 105 'attempted to force pick more land than exist
+            ErrorReturn = "Invalid configuration detected!  Not enough lands in library."
+            HandlerRoutine = MainMenu
         Case Else 'gracefully present the user with the raw error code if not otherwise handled
             ErrorReturn = "Generic Error Detected!  Error code: " + Trim$(Str$(CapturedError)) + "@" + Trim$(Str$(CapturedLine))
             HandlerRoutine = MainMenu
