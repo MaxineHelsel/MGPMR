@@ -81,7 +81,7 @@ Select Case HostOS
         SessionString = Date$ + "_" + LTrim$(RTrim$(Str$(Int(Timer))))
 End Select
 
-Const VersionString = "V1.3"
+Const VersionString = "V1.3.1"
 
 Const Wsize = 5
 Const R_Land = 0
@@ -183,7 +183,13 @@ For i = 0 To Wsize
     LibraryMaxSize(i) = RarityCount
     If RarityCount > LibArrayMaxSize Then LibArrayMaxSize = RarityCount
 Next
-DebugPrint "Largest Folder Size: " + Str$(LibArrayMaxSize)
+DebugPrint "Largest Rarity Size: " + Str$(LibArrayMaxSize)
+DebugPrint "Total Library Size Detected:"
+For i = 0 To Wsize
+    DebugPrint Str$(LibraryMaxSize(i))
+Next
+
+
 
 'build library array
 Dim LibraryArray(Wsize, LibArrayMaxSize) As String 'this is THE array that hold all of the file names for the fun little cards
@@ -191,17 +197,11 @@ For i = 0 To Wsize
     FilesPrompt i
     For ii = 0 To LibraryMaxSize(i)
         LibraryArray(i, ii) = Files$
-        'debugPrint "Found File: " + LibraryArray(i, ii)
+        If LibraryArray(i, ii) <> "../" And LibraryArray(i, ii) <> "..\" Then DebugPrint "Found File: " + LibraryArray(i, ii)
     Next
 Next
 'BUG TURNED INTO FEATURE CAUSE LAZY
 'LibraryArray(X,0) should always return "../" or "..\" os depending. from this point on we should only target (X,1) and higher for any actual use
-
-'debug print library size
-DebugPrint "Total Library Size Detected:"
-For i = 0 To Wsize
-    DebugPrint Str$(LibraryMaxSize(i))
-Next
 
 
 DebugPrint "Detect Additional Libraries"
@@ -241,7 +241,7 @@ Do
     Print "  Cards per Pack: ";: ColorNumberPrint Trim$(Str$(Settings(S_PackSize))), 0: Print
     Print "  Packs to Generate: ";: ColorNumberPrint Trim$(Str$(Settings(S_PackCount))), 0: Print
     Print "  Guarenteed Lands per Pack: ";: ColorNumberPrint Trim$(Str$(Settings(S_LandCount))), 0: Print
-    Print "  Active Library: " + Chr$(34) + LibraryDirectory + Settings_LibraryTarget + Chr$(34) + " (Total Libraries Detected: ";: ColorNumberPrint Trim$(Str$(LibraryCount)), 0: Print ")"
+    Print "  Active Library: " + Chr$(34) + LibraryDirectory + Settings_LibraryTarget + Chr$(34) + " (Total Libraries Detected: 1)" ';: ColorNumberPrint Trim$(Str$(LibraryCount)), 0: Print ")"
     Print
     Print "  Exit Program"
 
@@ -304,7 +304,6 @@ Do
             Case 0
                 GoTo generate
             Case 1 To 10
-                i = Settings(100)
                 'prompt for manual value input
             Case 11
                 System
