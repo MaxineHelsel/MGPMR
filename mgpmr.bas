@@ -86,7 +86,7 @@ Select Case HostOS
         SessionString = Date$ + "_" + LTrim$(RTrim$(Str$(Int(Timer))))
 End Select
 
-Const VersionString = "V1.5"
+Const VersionString = "V1.6b"
 
 Const Wsize = 5
 Const R_Land = 0
@@ -307,16 +307,11 @@ Do
     If MenuItem <> 10 Then Print "  Active Library: " + Chr$(34) + LibraryDirectory + Settings_LibraryTarget + Chr$(34) + " (Total Libraries Detected: ";: ColorNumberPrint Trim$(Str$(LibraryCount)), 0: Print ")"
     If MenuItem = 10 Then Color RGB(0, 255, 0): Print "  Select Library: ";: Print Chr$(34) + LibraryDirectory + AddtLibraryPathArray(LibraryInc) + Chr$(34);: Color RGB(255, 255, 255): Print " (Total Libraries Detected: ";: ColorNumberPrint Trim$(Str$(LibraryCount)), 0: Print ")"
 
-    If MenuItem <> 11 Or SelectionMode = 0 Then
-        Print "  Selection Mode: ";
-        If SelectionMode = 0 Then Print "Weight";
-        If SelectionMode = 1 Then Print "Count";
-        Print ""
-    Else
-        Color RGB(255, 0, 0)
-        Print "  Restart Required to Revert to Weights!"
-        Color RGB(255, 255, 255)
-    End If
+
+    Print "  Selection Mode: ";
+    If SelectionMode = 0 Then Print "Weight";
+    If SelectionMode = 1 Then Print "Count";
+    Print ""
 
     Print
     If MenuItem = 12 Then Color RGB(255, 0, 0)
@@ -395,17 +390,9 @@ Do
             Case 10
                 Settings_LibraryTarget = AddtLibraryPathArray(LibraryInc)
                 SaveSettings
-                Select Case HostOS
-                    Case "Windows"
-                        Shell Hide DontWait "mgpmr.exe"
-                    Case "Linux"
-                        Shell Hide DontWait "./mgpmr"
-                    Case "Mac OS"
-                        Shell Hide DontWait "./mgpmr.terminal"
-                End Select
-                System
+                Run
             Case 11
-                If SelectionMode = 1 Then System
+                If SelectionMode = 1 Then Run
                 SelectionMode = 1
                 For i = 0 To Wsize
                     Weights(i) = 0
