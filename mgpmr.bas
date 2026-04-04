@@ -1,3 +1,4 @@
+
 $NoPrefix
 Option Explicit
 Randomize Timer
@@ -5,7 +6,9 @@ Title "MGPMR"
 Dim Shared HostOS As String
 OSPROBE
 On Error GoTo ErrorHandler
-Screen NewImage(640, 480, 32)
+Const SystemResX = 640
+Const SystemREsY = 480
+Screen NewImage(SystemResX, SystemREsY, 32)
 $Console
 Console Off
 
@@ -26,9 +29,11 @@ $If WIN Then
     Const SettingsDirectory = "Settings\"
     Const SettingsFile = "Settings"
 
-    const TemplateLibrary = "Template\"
+    Const BackgroundPath = "Background.*"
 
-    const DirSlash = "\"
+    Const TemplateLibrary = "Template\"
+
+    Const DirSlash = "\"
 $End If
 $If LINUX Then
     Const LibraryDirectory = "Library/"
@@ -44,6 +49,8 @@ $If LINUX Then
 
     Const SettingsDirectory = "Settings/"
     Const SettingsFile = "Settings"
+
+    Const BackgroundPath = "Background.*"
 
     Const TemplateLibrary = "Template/"
 
@@ -63,6 +70,8 @@ $If MAC Then
 
     Const SettingsDirectory = "Settings/"
     Const SettingsFile = "Settings"
+
+    const BackgroundPath = "Background.*"
 
     const TemplateLibrary = "Template/"
 
@@ -88,7 +97,8 @@ Select Case HostOS
         SessionString = Date$ + "_" + LTrim$(RTrim$(Str$(Int(Timer))))
 End Select
 
-Const VersionString = "V1.6"
+Const VersionString = "V1.7"
+
 
 Const Wsize = 5
 Const R_Land = 0
@@ -110,6 +120,8 @@ Dim Shared Settings(Ssize) As Single
 Dim Shared Settings_LibraryTarget As String
 
 Dim Shared SelectionMode
+Dim Shared BackgroundLoaded
+Dim Shared BackgroundData As Long
 
 Dim Shared ErrorReturn As String
 
@@ -120,6 +132,8 @@ Dim LibraryMaxSize(Wsize) As Single
 Dim LibArrayMaxSize As Single
 Dim Shared LibraryTotalSize
 Dim i, ii
+
+
 
 
 
@@ -243,8 +257,9 @@ If RecursionCounter = 0 Then
     GoTo RePass
 End If
 RecursionCounter = 0
+DebugPrint "Total Libraries Detected: " + Str$(LibraryCount)
 
-
+DrawBackground
 
 
 
@@ -263,10 +278,11 @@ KeyClear
 Do
 
     Cls
+    If BackgroundLoaded = 1 Then PutImage (0, 0)-(SystemResX, SystemREsY), BackgroundData
     Locate 1, 1
     Print "Maxaroth's Game Pack Maker for Reena (MGPMR)"
-    Print VersionString;
-    Color RGB(255, 0, 0): Print " " + ErrorReturn;: Color RGB(255, 255, 255): Print
+    Print VersionString;: Color RGB(255, 0, 0): If ErrorReturn <> "" Then Print " " + ErrorReturn;
+    Color RGB(255, 255, 255): Print
     Locate 3, 1: Print
     If MenuItem = 0 Then Color RGB(0, 255, 0) Else Color RGB(255 * .6, 255, 255 * .6)
     Print "  Generate Packs": Color RGB(255, 255, 255)
@@ -387,21 +403,17 @@ Do
         MenuConf = 0
         'what to we do when enter is hit?
         Select Case MenuItem
-            Case 0
-                Locate 4, 1
-                Color RGB(0, 155, 0)
-                Print "Generating Pack(s)...  MGPMR will automatically close upon completion."
-                Display
-                If HostOS <> "Windows" Then Delay 1
+            Case 0 'generate pack
                 GoTo generate
-            Case 1 To 9
+            Case 1 To 9 'adjust weights
                 'prompt for manual value input
-            Case 10
+            Case 10 'select new library
                 Settings_LibraryTarget = AddtLibraryPathArray(LibraryInc)
+                DebugPrint "Changing active library to " + Settings_LibraryTarget + "."
                 SaveSettings
-                Run
-            Case 11
-                If SelectionMode = 1 Then Run
+                ResetEnv
+            Case 11 'change mode
+                If SelectionMode = 1 Then ResetEnv
                 SelectionMode = 1
                 For i = 0 To Wsize
                     Weights(i) = 0
@@ -420,6 +432,9 @@ Loop
 
 generate:
 AutoDisplay
+Locate 4, 1
+Color RGB(0, 155, 0)
+Print "Generating Pack(s)...  MGPMR will automatically close upon completion."
 
 'save settings
 SaveSettings
@@ -454,6 +469,9 @@ If SelectionMode = 1 Then
         If Weights(i) > LibraryMaxSize(i) Then Error 106
     Next
 End If
+
+'slight delay for non windows systems to show the generating message, copy on windows is slow enough to show it anyway
+If HostOS <> "Windows" Then Delay 1
 
 If SelectionMode = 0 Then DebugPrint "Generating" + Str$(Settings(S_PackCount)) + " Packs containing" + Str$(Settings(S_PackSize)) + " Cards."
 If SelectionMode = 1 Then DebugPrint "Generating" + Str$(Settings(S_PackCount)) + " Packs containing set card counts."
@@ -558,6 +576,27 @@ Select Case HandlerRoutine
         Resume Next
 End Select
 
+Sub DrawBackground
+
+    Dim ValidBackground As String
+    DebugPrint "Checking for background file."
+    ValidBackground = Files$(SettingsDirectory + BackgroundPath)
+    If FileExists(SettingsDirectory + ValidBackground) <> 0 Then
+        DebugPrint "Found background file at " + ValidBackground + ", loading..."
+        BackgroundData = LoadImage(SettingsDirectory + ValidBackground)
+        If BackgroundData < -1 Then
+            DebugPrint "Background loading successful! Applying."
+            BackgroundLoaded = 1
+        Else
+            DebugPrint "Failed to load background, Defaulting to Black."
+        End If
+
+    Else
+        DebugPrint "No background file found."
+    End If
+
+End Sub
+
 Function Shift
     If KeyDown(100303) Or KeyDown(100304) Then Shift = -1
 End Function
@@ -612,12 +651,12 @@ Sub SettingsGenerate (Forced)
     SaveableVariable = VersionString
     If DirExists(SettingsDirectory) = 0 Or Forced = 1 Then
         If Forced = 1 Then
-            DebugPrint "Deleting Existing Settings Folder."
+            DebugPrint "Deleting Existing Settings File."
             Kill SettingsDirectory + SettingsFile
-            RmDir SettingsDirectory
+            'RmDir SettingsDirectory | Do not kill the folder, background is stored here!!!
         End If
-        DebugPrint "Generating Settings Folder."
-        MkDir SettingsDirectory
+        DebugPrint "Generating Settings File."
+        If DirExists(SettingsDirectory) = 0 Then MkDir SettingsDirectory
         Open SettingsDirectory + SettingsFile For Random As #1
         Put #1, 1, HostOS
         Put #1, 2, SaveableVariable
@@ -648,6 +687,13 @@ Sub LoadSettings
     Get #1, 3, Settings()
     Get #1, 4, Settings_LibraryTarget
     Close #1
+End Sub
+
+Sub ResetEnv
+    DebugPrint "Environment update required!"
+    DebugPrint "Resetting MGPMR..."
+    DebugPrint ""
+    Run
 End Sub
 
 
