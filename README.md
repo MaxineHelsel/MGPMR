@@ -19,6 +19,8 @@ Generated packs will be saved in the ./Pack/(SessionTimestamp)/ directory.
 
 Additional libraries can be utilized by cloning and renaming the "Template" library
 
+Placing an image titled "Background" in the Settings folder (./Settings/Background.*) will load it as a background image.
+
 
 
 ### Files
